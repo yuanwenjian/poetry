@@ -8,10 +8,13 @@ import com.yuanwj.poetry.model.SpiderRequest;
 import com.yuanwj.poetry.model.SpiderResult;
 import com.yuanwj.poetry.repository.PoetryLocationRepository;
 import com.yuanwj.poetry.repository.PoetryRepository;
+import com.yuanwj.poetry.service.service.PoetryServiceImpl;
 import com.yuanwj.poetry.service.spider.ParseService;
 import com.yuanwj.poetry.service.spider.impl.LocationParseService;
 import com.yuanwj.poetry.service.spider.impl.PoetryParseService;
+import com.yuanwj.poetry.utils.ExecutorUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -19,6 +22,9 @@ import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 @RestController
 @RequestMapping(value = "/api/v1/poetry/")
@@ -93,4 +99,25 @@ public class PoetrySpiderRest {
         }
         return "success";
     }
+
+    @RequestMapping(value = "testThread")
+    public String testThread() {
+        int size = poetryRepository.findAll().size();
+        int totalPage = (size - 1) % 2 + 1;
+        ExecutorService executorService = ExecutorUtils.getExecutorService();
+        for (int page = 1; page <= totalPage; page++) {
+            PoetryServiceImpl poetryService = new PoetryServiceImpl(page, 2);
+            Future<List<Poetry>> future = executorService.submit(poetryService);
+            try {
+                List<Poetry> poetries = future.get();
+                System.out.println(poetries.size());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+        return "success";
+    }
+
 }

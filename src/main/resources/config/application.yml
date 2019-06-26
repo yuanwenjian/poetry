@@ -7,5 +7,7 @@ spring:
 #          url: jdbc:mysql://192.168.1.58:3306/edb_a20000?useSSL=false
         username: root
         password: 123456
+    jpa:
+        show-sql: true
 server:
     port: 8081
